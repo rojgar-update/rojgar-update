@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rojgar Update Admin Login</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #eef3fa;
+      color: #17345d;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 410px;
+      padding: 28px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 35px #17345d18;
+    }
+
+    h1 { margin-top: 0; font-size: 25px; }
+    p { color: #52637a; }
+
+    label {
+      display: block;
+      margin: 16px 0 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccd6e4;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #164b91;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: .6; }
+
+    #message {
+      margin-top: 15px;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    #dashboard { display: none; }
+  </style>
+</head>
+
+<body>
+  <main class="panel">
+    <section id="login">
+      <h1>ROJGAR UPDATE</h1>
+      <p>Admin Panel Login</p>
+
+      <form id="loginForm">
+        <label for="email">Admin Email / Username</label>
+        <input id="email" type="email"
+          placeholder="Admin email address"
+          autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+          placeholder="Enter password"
+          autocomplete="current-password" required>
+
+        <button id="loginButton" type="submit">
+          Login to Admin Panel
+        </button>
+      </form>
+    </section>
+
+    <section id="dashboard">
+      <h1>Admin Dashboard</h1>
+      <p id="welcome"></p>
+      <p>आप Admin के रूप में Login हैं।</p>
+
+      <button type="button" id="logoutButton">
+        Logout
+      </button>
+    </section>
+
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    // Firebase Console se apni asli config yahan paste karein.
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_FIREBASE_APP_ID"
+    };
+
+    // Apne Firebase Admin account ka email likhein.
+    const ADMIN_EMAIL = "YOUR_ADMIN_EMAIL@example.com";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const login = document.getElementById("login");
+    const dashboard = document.getElementById("dashboard");
+    const message = document.getElementById("message");
+    const loginButton = document.getElementById("loginButton");
+
+    function showMessage(text) {
+      message.textContent = text;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user && user.email &&
+          user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        login.style.display = "none";
+        dashboard.style.display = "block";
+        document.getElementById("welcome").textContent =
+          "Logged in: " + user.email;
+        showMessage("");
+      } else {
+        login.style.display = "block";
+        dashboard.style.display = "none";
+
+        if (user) {
+          await signOut(auth);
+          showMessage("इस अकाउंट को Admin की अनुमति नहीं है।");
+        }
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener(
+      "submit", async (event) => {
+        event.preventDefault();
+        loginButton.disabled = true;
+        showMessage("Login जाँच रहे हैं...");
+
+        try {
+          const email = document.getElementById("email")
+            .value.trim();
+          const password = document.getElementById("password").value;
+
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+          showMessage("Login नहीं हुआ। Email और Password जाँचें।");
+        } finally {
+          loginButton.disabled = false;
+        }
+      }
+    );
+
+    document.getElementById("logoutButton").addEventListener(
+      "click", async () => {
+        await signOut(auth);
+        showMessage("आप Logout हो गए हैं।");
+      }
+    );
+  </script>
+</body>
+</html>
